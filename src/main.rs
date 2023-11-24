@@ -1,8 +1,7 @@
 use std::cmp::Ordering;
 use std::iter::Peekable;
 use std::str::Chars;
-use std::io::{stdin, stdout, Write};
-use std::env;
+use std::io::{stdin, stdout, Write, IsTerminal, Read};
 
 fn compute(input: String) -> Result<f64, String> {
     let tokens = tokenize(input);
@@ -22,28 +21,34 @@ fn compute(input: String) -> Result<f64, String> {
 }
 
 fn main() {
-    let args = env::args().collect::<Vec<String>>();
-    if args.len() > 1 {
-        let input = args[1..].into_iter().fold(String::new(), |s, e| s + e);
-        match compute(input) {
-            Err(e) => println!("Error: {}", e),
-            Ok(e) => println!("{}", e)
-        }
-        return;
-    }
-    loop {
-        print!("> ");
-        stdout().flush().unwrap();
-        let mut input = String::new();
-        if let Ok(n) = stdin().read_line(&mut input) {
-            if n == 0 {
+    if stdin().is_terminal() {
+        loop {
+            print!("> ");
+            stdout().flush().unwrap();
+            let mut input = String::new();
+            if let Ok(n) = stdin().read_line(&mut input) {
+                if n == 0 {
+                    break;
+                }
+            } else {
                 break;
             }
-        } else {
-            break;
+            match compute(input) {
+                Err(e) => println!("Error: {}", e),
+                Ok(e) => println!("{}", e)
+            }
         }
+    } else {
+        let mut input = String::new();
+        if let Ok(n) = stdin().read_to_string(&mut input) {
+            if n == 0 {
+                return;
+            }
+        } else {
+            return;
+        };
         match compute(input) {
-            Err(e) => println!("Error: {}", e),
+            Err(e) => eprintln!("{}", e),
             Ok(e) => println!("{}", e)
         }
     }
