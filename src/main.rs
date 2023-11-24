@@ -2,6 +2,17 @@ use std::cmp::Ordering;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::io::{stdin, stdout, Write, IsTerminal, Read};
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+struct Args {
+    /// print debug symbols
+    #[arg(short, default_value_t=false)]
+    debug: bool,
+
+    /// string to compute
+    command: Option<String>
+}
 
 fn compute(input: String) -> Result<f64, String> {
     let tokens = tokenize(input);
@@ -21,6 +32,16 @@ fn compute(input: String) -> Result<f64, String> {
 }
 
 fn main() {
+    let args = Args::parse();
+
+    if let Some(input) = args.command {
+        match compute(input) {
+            Err(e) => eprintln!("{}", e),
+            Ok(e) => println!("{}", e)
+        }
+        return;
+    }
+
     if stdin().is_terminal() {
         loop {
             print!("> ");
