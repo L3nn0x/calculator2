@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::io::{stdin, stdout, Write};
@@ -16,12 +17,72 @@ fn main() {
             break;
         }
         let tokens = tokenize(input);
-        println!("{:?}", tokens);
+        let tokens = shutting_yard(tokens);
+        let tokens = match tokens {
+            Ok(tokens) => tokens,
+            Err(e) => {
+                println!("{}", e);
+                continue
+            }
+        };
         let result = evaluate(tokens);
         if let Some(result) = result {
             println!("{result}");
         }
     }
+}
+
+fn shutting_yard(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
+    let mut output = Vec::new();
+    let mut stack = Vec::new();
+
+    for tok in tokens {
+        match tok {
+            Token::Float(_) | Token::Integer(_) => output.push(tok),
+            Token::Operator(o1) => {
+                while let Some(op) = stack.last() {
+                    let o2 = match op {
+                        Token::Operator(o2) => o2,
+                        Token::LeftParenthesis => break,
+                        _ => unreachable!("Only operators here")
+                    };
+                    if *o2 > o1 || *o2 == o1 {
+                        output.push(*op);
+                        stack.pop();
+                    } else {
+                        break
+                    }
+                }
+                stack.push(Token::Operator(o1));
+            },
+            Token::LeftParenthesis => {
+                stack.push(Token::LeftParenthesis);
+            },
+            Token::RightParenthesis => {
+                let mut found = false;
+                while let Some(op) = stack.pop() {
+                    if op != Token::LeftParenthesis {
+                        output.push(op);
+                    } else {
+                        found = true;
+                        break
+                    }
+                }
+                if !found {
+                    return Err("Mismatched parenthesis".to_string());
+                }
+            }
+        }
+    }
+
+    while let Some(op) = stack.pop() {
+        if op == Token::LeftParenthesis || op == Token::RightParenthesis {
+            return Err("Mismatched parenthesis".to_string());
+        }
+        output.push(op);
+    }
+
+    Ok(output)
 }
 
 fn evaluate(tokens: Vec<Token>) -> Option<f64> {
@@ -33,18 +94,25 @@ fn evaluate(tokens: Vec<Token>) -> Option<f64> {
             Token::Operator(p) => {
                 let res = p.evaluate(&mut stack)?;
                 stack.push(res);
-            }
+            },
+            _ => unreachable!("No parenthesis should be there")
         }
     }
     stack.pop()
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Ord, Clone, Copy)]
 enum Operator {
     Plus,
     Minus,
     Div,
     Mul
+}
+
+impl PartialOrd for Operator {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.to_prio().cmp(&other.to_prio()))
+    }
 }
 
 fn apply<F: FnOnce(f64, f64)->f64>(stack: &mut Vec<f64>, f: F) -> f64 {
@@ -54,6 +122,13 @@ fn apply<F: FnOnce(f64, f64)->f64>(stack: &mut Vec<f64>, f: F) -> f64 {
 }
 
 impl Operator {
+    fn to_prio(&self) -> i32 {
+        match *self {
+            Operator::Mul | Operator::Div => 2,
+            _ => 1
+        }
+    }
+
     fn from(value: char) -> Option<Operator> {
         match value {
             '+' => Some(Operator::Plus),
@@ -85,11 +160,13 @@ impl Operator {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum Token {
     Integer(i64),
     Float(f64),
-    Operator(Operator)
+    Operator(Operator),
+    LeftParenthesis,
+    RightParenthesis
 }
 
 fn is_whitespace(c: char) -> bool {
@@ -105,7 +182,7 @@ fn tokenize(s: String) -> Vec<Token> {
         let mut number = String::new();
 
         while let Some(&c) = it.peek() {
-            if is_whitespace(c) && !c.is_ascii_hexdigit() && c != '.' && c != 'x' && c != 'X' {
+            if c == '(' || c == ')' || Operator::from(c).is_some() || is_whitespace(c) && !c.is_ascii_hexdigit() && c != '.' && c != 'x' && c != 'X' {
                 break;
             }
             number.push(c);
@@ -116,6 +193,7 @@ fn tokenize(s: String) -> Vec<Token> {
     };
 
     let mut minus = false;
+    let mut previous_char = '\0';
     while let Some(&c) = it.peek() {
         if is_whitespace(c) {
             if minus {
@@ -125,8 +203,14 @@ fn tokenize(s: String) -> Vec<Token> {
             it.next();
             continue;
         }
-        if let Some(op) = Operator::from(c) {
-            if op == Operator::Minus && !minus {
+        if c == '(' {
+            res.push(Token::LeftParenthesis);
+            it.next();
+        } else if c == ')' {
+            res.push(Token::RightParenthesis);
+            it.next();
+        } else if let Some(op) = Operator::from(c) {
+            if op == Operator::Minus && (is_whitespace(previous_char) && !minus) {
                 minus = true;
             } else {
                 minus = false;
@@ -151,6 +235,7 @@ fn tokenize(s: String) -> Vec<Token> {
                 }
             }
         }
+        previous_char = c;
     }
 
     res
