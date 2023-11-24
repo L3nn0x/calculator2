@@ -11,11 +11,14 @@ struct Args {
     debug: bool,
 
     /// string to compute
-    command: Option<String>
+    input: Option<String>
 }
 
-fn compute(input: String) -> Result<f64, String> {
+fn compute(input: String, debug: bool) -> Result<f64, String> {
     let tokens = tokenize(input);
+    if debug {
+        println!("parsed string: {:?}", tokens);
+    }
     let tokens = shutting_yard(tokens);
     let tokens = match tokens {
         Ok(tokens) => tokens,
@@ -23,6 +26,9 @@ fn compute(input: String) -> Result<f64, String> {
             return Err(e);
         }
     };
+    if debug {
+        println!("re-ordered string: {:?}", tokens);
+    }
     let result = evaluate(tokens);
     if let Some(result) = result {
         Ok(result)
@@ -34,8 +40,8 @@ fn compute(input: String) -> Result<f64, String> {
 fn main() {
     let args = Args::parse();
 
-    if let Some(input) = args.command {
-        match compute(input) {
+    if let Some(input) = args.input {
+        match compute(input, args.debug) {
             Err(e) => eprintln!("{}", e),
             Ok(e) => println!("{}", e)
         }
@@ -54,7 +60,7 @@ fn main() {
             } else {
                 break;
             }
-            match compute(input) {
+            match compute(input, args.debug) {
                 Err(e) => println!("Error: {}", e),
                 Ok(e) => println!("{}", e)
             }
@@ -68,7 +74,7 @@ fn main() {
         } else {
             return;
         };
-        match compute(input) {
+        match compute(input, args.debug) {
             Err(e) => eprintln!("{}", e),
             Ok(e) => println!("{}", e)
         }
