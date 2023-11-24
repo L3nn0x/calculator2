@@ -2,9 +2,35 @@ use std::cmp::Ordering;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::io::{stdin, stdout, Write};
+use std::env;
 
+fn compute(input: String) -> Result<f64, String> {
+    let tokens = tokenize(input);
+    let tokens = shutting_yard(tokens);
+    let tokens = match tokens {
+        Ok(tokens) => tokens,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    let result = evaluate(tokens);
+    if let Some(result) = result {
+        Ok(result)
+    } else {
+        Err("Error in computation".to_string())
+    }
+}
 
 fn main() {
+    let args = env::args().collect::<Vec<String>>();
+    if args.len() > 1 {
+        let input = args[1..].into_iter().fold(String::new(), |s, e| s + e);
+        match compute(input) {
+            Err(e) => println!("Error: {}", e),
+            Ok(e) => println!("{}", e)
+        }
+        return;
+    }
     loop {
         print!("> ");
         stdout().flush().unwrap();
@@ -16,18 +42,9 @@ fn main() {
         } else {
             break;
         }
-        let tokens = tokenize(input);
-        let tokens = shutting_yard(tokens);
-        let tokens = match tokens {
-            Ok(tokens) => tokens,
-            Err(e) => {
-                println!("{}", e);
-                continue
-            }
-        };
-        let result = evaluate(tokens);
-        if let Some(result) = result {
-            println!("{result}");
+        match compute(input) {
+            Err(e) => println!("Error: {}", e),
+            Ok(e) => println!("{}", e)
         }
     }
 }
