@@ -17,15 +17,40 @@ fn main() {
         }
         let tokens = tokenize(input);
         println!("{:?}", tokens);
+        let result = evaluate(tokens);
+        if let Some(result) = result {
+            println!("{result}");
+        }
     }
 }
 
-#[derive(Debug)]
+fn evaluate(tokens: Vec<Token>) -> Option<f64> {
+    let mut stack = Vec::new();
+    for tok in tokens {
+        match tok {
+            Token::Float(f) => stack.push(f),
+            Token::Integer(n) => stack.push(n as f64),
+            Token::Operator(p) => {
+                let res = p.evaluate(&mut stack)?;
+                stack.push(res);
+            }
+        }
+    }
+    stack.pop()
+}
+
+#[derive(Debug, PartialEq, Eq)]
 enum Operator {
     Plus,
     Minus,
     Div,
     Mul
+}
+
+fn apply<F: FnOnce(f64, f64)->f64>(stack: &mut Vec<f64>, f: F) -> f64 {
+    let b = stack.pop().unwrap();
+    let a = stack.pop().unwrap();
+    f(a, b)
 }
 
 impl Operator {
@@ -36,6 +61,26 @@ impl Operator {
             '/' => Some(Operator::Div),
             '*' => Some(Operator::Mul),
             _ => None
+        }
+    }
+
+    fn evaluate(&self, stack: &mut Vec<f64>) -> Option<f64> {
+        if stack.len() < 2 {
+            return None;
+        }
+        match *self {
+            Operator::Plus => {
+                Some(apply(stack, |a,b| a+b))
+            },
+            Operator::Minus => {
+                Some(apply(stack, |a,b|a-b))
+            },
+            Operator::Mul => {
+                Some(apply(stack,|a,b|a*b))
+            },
+            Operator::Div => {
+                Some(apply(stack,|a,b|a/b))
+            }
         }
     }
 }
@@ -70,27 +115,39 @@ fn tokenize(s: String) -> Vec<Token> {
         number
     };
 
+    let mut minus = false;
     while let Some(&c) = it.peek() {
         if is_whitespace(c) {
+            if minus {
+                minus = false;
+                res.push(Token::Operator(Operator::Minus));
+            }
             it.next();
             continue;
         }
         if let Some(op) = Operator::from(c) {
-            res.push(Token::Operator(op));
+            if op == Operator::Minus && !minus {
+                minus = true;
+            } else {
+                minus = false;
+                res.push(Token::Operator(op));
+            }
             it.next();
         } else {
             let number = parse_number(&mut it);
+            let m = if minus { -1 } else { 1 };
+            minus = false;
             if number.starts_with("0x") || number.starts_with("0X") {
                 if let Ok(n) = i64::from_str_radix(&number[2..], 16) {
-                    res.push(Token::Integer(n));
+                    res.push(Token::Integer(m * n));
                 }
             } else if number.contains('.') {
                 if let Ok(n) = number.parse::<f64>() {
-                    res.push(Token::Float(n));
+                    res.push(Token::Float(m as f64 * n));
                 }
             } else {
                 if let Ok(n) = number.parse::<i64>() {
-                    res.push(Token::Integer(n));
+                    res.push(Token::Integer(m * n));
                 }
             }
         }
