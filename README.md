@@ -16,7 +16,11 @@ There is one option: `-d` to display debugging informations.
 
 # TODO
 [ ] Add a proper logging library to avoid passing the debugging info everywhere
+
 [ ] Add support for built-in functions (`cos`, `sin`, `tan`, `sqrt`)
+
 [ ] Add support for exponential
+
 [ ] Add support for custom variables
+
 [ ] Add support for custom functions
