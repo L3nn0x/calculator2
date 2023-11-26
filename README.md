@@ -15,7 +15,7 @@ You can also pass the input as a command line argument `./calculator "(1+1)"` or
 There is one option: `-d` to display debugging informations.
 
 # TODO
-[ ] Add a proper logging library to avoid passing the debugging info everywhere
+[x] Add a proper logging library to avoid passing the debugging info everywhere
 
 [ ] Add support for built-in functions (`cos`, `sin`, `tan`, `sqrt`)
 

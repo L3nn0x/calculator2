@@ -3,6 +3,7 @@ use std::iter::Peekable;
 use std::str::Chars;
 use std::io::{stdin, stdout, Write, IsTerminal, Read};
 use clap::Parser;
+use log::{debug, trace, LevelFilter};
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -10,15 +11,18 @@ struct Args {
     #[arg(short, default_value_t=false)]
     debug: bool,
 
+    /// print trace symbols
+    #[arg(short, default_value_t=false)]
+    trace: bool,
+
     /// string to compute
     input: Option<String>
 }
 
-fn compute(input: String, debug: bool) -> Result<f64, String> {
+fn compute(input: String) -> Result<f64, String> {
+    debug!("String to evaluate {:?}", input);
     let tokens = tokenize(input);
-    if debug {
-        println!("parsed string: {:?}", tokens);
-    }
+    debug!("parsed string: {:?}", tokens);
     let tokens = shutting_yard(tokens);
     let tokens = match tokens {
         Ok(tokens) => tokens,
@@ -26,9 +30,7 @@ fn compute(input: String, debug: bool) -> Result<f64, String> {
             return Err(e);
         }
     };
-    if debug {
-        println!("re-ordered string: {:?}", tokens);
-    }
+    debug!("re-ordered string: {:?}", tokens);
     let result = evaluate(tokens);
     if let Some(result) = result {
         Ok(result)
@@ -40,8 +42,16 @@ fn compute(input: String, debug: bool) -> Result<f64, String> {
 fn main() {
     let args = Args::parse();
 
+    simple_logging::log_to_stderr(if args.trace {
+        LevelFilter::Trace
+    } else if args.debug {
+        LevelFilter::Debug
+    } else {
+        LevelFilter::Info
+    });
+
     if let Some(input) = args.input {
-        match compute(input, args.debug) {
+        match compute(input) {
             Err(e) => eprintln!("{}", e),
             Ok(e) => println!("{}", e)
         }
@@ -60,7 +70,7 @@ fn main() {
             } else {
                 break;
             }
-            match compute(input, args.debug) {
+            match compute(input) {
                 Err(e) => println!("Error: {}", e),
                 Ok(e) => println!("{}", e)
             }
@@ -74,7 +84,7 @@ fn main() {
         } else {
             return;
         };
-        match compute(input, args.debug) {
+        match compute(input) {
             Err(e) => eprintln!("{}", e),
             Ok(e) => println!("{}", e)
         }
@@ -137,6 +147,8 @@ fn shutting_yard(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
 fn evaluate(tokens: Vec<Token>) -> Option<f64> {
     let mut stack = Vec::new();
     for tok in tokens {
+        trace!("current stack {:?}", stack);
+        trace!("evaluating {:?}", tok);
         match tok {
             Token::Float(f) => stack.push(f),
             Token::Integer(n) => stack.push(n as f64),
@@ -231,6 +243,7 @@ fn tokenize(s: String) -> Vec<Token> {
         let mut number = String::new();
 
         while let Some(&c) = it.peek() {
+            trace!("parsing number {:?}", c);
             if c == '(' || c == ')' || Operator::from(c).is_some() || is_whitespace(c) && !c.is_ascii_hexdigit() && c != '.' && c != 'x' && c != 'X' {
                 break;
             }
@@ -244,6 +257,7 @@ fn tokenize(s: String) -> Vec<Token> {
     let mut minus = false;
     let mut previous_char = '\0';
     while let Some(&c) = it.peek() {
+        trace!("parsing {:?}", c);
         if is_whitespace(c) {
             if minus {
                 minus = false;
