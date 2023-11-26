@@ -166,7 +166,8 @@ enum Operator {
     Plus,
     Minus,
     Div,
-    Mul
+    Mul,
+    Exp
 }
 
 impl PartialOrd for Operator {
@@ -184,6 +185,7 @@ fn apply<F: FnOnce(f64, f64)->f64>(stack: &mut Vec<f64>, f: F) -> f64 {
 impl Operator {
     fn to_prio(&self) -> i32 {
         match *self {
+            Operator::Exp => 3,
             Operator::Mul | Operator::Div => 2,
             _ => 1
         }
@@ -195,6 +197,7 @@ impl Operator {
             '-' => Some(Operator::Minus),
             '/' => Some(Operator::Div),
             '*' => Some(Operator::Mul),
+            '^' => Some(Operator::Exp),
             _ => None
         }
     }
@@ -205,16 +208,19 @@ impl Operator {
         }
         match *self {
             Operator::Plus => {
-                Some(apply(stack, |a,b| a+b))
+                Some(apply(stack, |a, b| a + b))
             },
             Operator::Minus => {
-                Some(apply(stack, |a,b|a-b))
+                Some(apply(stack, |a, b| a - b))
             },
             Operator::Mul => {
-                Some(apply(stack,|a,b|a*b))
+                Some(apply(stack,|a, b| a * b))
             },
             Operator::Div => {
-                Some(apply(stack,|a,b|a/b))
+                Some(apply(stack,|a, b| a / b))
+            },
+            Operator::Exp => {
+                Some(apply(stack, |a, b| a.powf(b)))
             }
         }
     }
