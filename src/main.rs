@@ -147,8 +147,7 @@ fn shutting_yard(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
 fn evaluate(tokens: Vec<Token>) -> Option<f64> {
     let mut stack = Vec::new();
     for tok in tokens {
-        trace!("current stack {:?}", stack);
-        trace!("evaluating {:?}", tok);
+        trace!("evaluating {:?} with current stack {:?}", tok, stack);
         match tok {
             Token::Float(f) => stack.push(f),
             Token::Integer(n) => stack.push(n as f64),
