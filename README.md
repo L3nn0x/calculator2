@@ -10,7 +10,7 @@ You can run it as follow:
 >
 ```
 
-You can also pass the input as a command line argument `calculator "(1+1)"` or piped in: `echo "(1-1) | ./calculator`.
+You can also pass the input as a command line argument `./calculator "(1+1)"` or piped in: `echo "(1-1)" | ./calculator`.
 
 There is one option: `-d` to display debugging informations.
 
