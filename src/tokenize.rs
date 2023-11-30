@@ -3,7 +3,7 @@ use super::token::{Token, Operator};
 use nom::{
     character::complete::{char, i64, hex_digit1, multispace0},
     number::complete::*,
-    combinator::{map, map_res, opt}, IResult, sequence::{tuple, delimited}, branch::alt, bytes::complete::tag, Parser, error::ParseError, multi::many0
+    combinator::{map, map_res}, IResult, sequence::{tuple, delimited}, branch::alt, bytes::complete::tag, Parser, error::ParseError, multi::many0
 };
 
 fn ws<'a, O, E: ParseError<&'a str>, F: Parser<&'a str, O, E>>(
@@ -13,28 +13,18 @@ fn ws<'a, O, E: ParseError<&'a str>, F: Parser<&'a str, O, E>>(
 }
 
 fn integer(i: &str) -> IResult<&str, Token> {
-    map(tuple((opt(char('-')), i64)), |(sign, res)| {
-        let s = if sign.is_some() { -1 } else { 1 };
-        Token::Integer(s * res)
-    })(i)
+    map(i64, |res| Token::Integer(res))(i)
 }
 
 fn hexa(i: &str) -> IResult<&str, Token> {
     map_res(tuple((
-        opt(char('-')),
         alt((tag("0x"), tag("0X"))),
         hex_digit1
-    )), |(sign, _, digits)| {
-        let s = if sign.is_some() { -1 } else { 1 };
-        i64::from_str_radix(digits, 16).map(|n| Token::Integer(s * n))
-    })(i)
+    )), |(_, digits)| i64::from_str_radix(digits, 16).map(|n| Token::Integer(n)))(i)
 }
 
 fn float(i: &str) -> IResult<&str, Token> {
-    map(tuple((opt(char('-')), double)), |(sign, res)| {
-        let s = if sign.is_some() { -1 } else { 1 };
-        Token::Float(s as f64 * res)
-    })(i)
+    map(double, |res| Token::Float(res))(i)
 }
 
 fn number(i: &str) -> IResult<&str, Token> {
