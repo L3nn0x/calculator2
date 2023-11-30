@@ -24,9 +24,9 @@ fn apply<F: FnOnce(f64, f64)->f64>(stack: &mut Vec<f64>, f: F) -> f64 {
 impl Operator {
     pub(crate) fn to_prio(&self) -> i32 {
         match *self {
-            Operator::Exp => 3,
-            Operator::Mul | Operator::Div => 2,
-            _ => 1
+            Operator::Exp => 4,
+            Operator::Mul | Operator::Div => 3,
+            _ => 2
         }
     }
 
