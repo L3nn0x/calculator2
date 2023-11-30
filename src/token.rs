@@ -65,11 +65,11 @@ impl Operator {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum Token {
     Integer(i64),
     Float(f64),
     Operator(Operator),
     LeftParenthesis,
-    RightParenthesis
+    RightParenthesis,
 }

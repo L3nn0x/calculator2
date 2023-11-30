@@ -15,7 +15,7 @@ You can also pass the input as a command line argument `./calculator "(1+1)"` or
 There is one option: `-d` to display debugging informations.
 
 # TODO
-[ ] Add support for built-in functions (`cos`, `sin`, `tan`, `sqrt`)
+[ ] Add support for built-in functions (`cos`, `sin`, `tan`, `sqrt`, `abs`)
 
 [ ] Add support for custom variables
 

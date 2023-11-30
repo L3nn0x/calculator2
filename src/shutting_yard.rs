@@ -15,7 +15,7 @@ pub(crate) fn shutting_yard(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
                         _ => unreachable!("Only operators here")
                     };
                     if *o2 > o1 || *o2 == o1 {
-                        output.push(*op);
+                        output.push(op.clone());
                         stack.pop();
                     } else {
                         break
