@@ -3,7 +3,7 @@ use super::token::{Token, Operator};
 use nom::{
     character::complete::{char, i64, hex_digit1, multispace0},
     number::complete::*,
-    combinator::{map, map_res, opt}, IResult, sequence::{tuple, delimited}, branch::alt, bytes::complete::tag, Parser, error::{ParseError, VerboseError}, multi::{separated_list0, many0}
+    combinator::{map, map_res, opt}, IResult, sequence::{tuple, delimited}, branch::alt, bytes::complete::tag, Parser, error::ParseError, multi::many0
 };
 
 fn ws<'a, O, E: ParseError<&'a str>, F: Parser<&'a str, O, E>>(
@@ -39,9 +39,9 @@ fn float(i: &str) -> IResult<&str, Token> {
 
 fn number(i: &str) -> IResult<&str, Token> {
     alt((
-        ws(integer),
         ws(hexa),
-        ws(float)
+        ws(float),
+        ws(integer),
     ))(i)
 }
 
