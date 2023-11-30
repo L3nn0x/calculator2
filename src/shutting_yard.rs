@@ -1,10 +1,12 @@
 use super::token::Token;
+use log::trace;
 
 pub(crate) fn shutting_yard(tokens: Vec<Token>) -> Result<Vec<Token>, String> {
     let mut output = Vec::new();
     let mut stack = Vec::new();
 
     for tok in tokens {
+        trace!("Running shutting yard current token {:?} output {:?} stack {:?}", tok, output, stack);
         match tok {
             Token::Float(_) | Token::Integer(_) => output.push(tok),
             Token::Operator(o1) => {
