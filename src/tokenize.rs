@@ -36,11 +36,11 @@ fn number(i: &str) -> IResult<&str, Token> {
 }
 
 fn lparent(i: &str) -> IResult<&str, Token> {
-    map(tag("("), |_| Token::LeftParenthesis)(i)
+    map(char('('), |_| Token::LeftParenthesis)(i)
 }
 
 fn rparent(i: &str) -> IResult<&str, Token> {
-    map(tag(")"), |_| Token::RightParenthesis)(i)
+    map(char(')'), |_| Token::RightParenthesis)(i)
 }
 
 fn operators(i: &str) -> IResult<&str, Token> {
