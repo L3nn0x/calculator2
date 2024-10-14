@@ -20,3 +20,5 @@ There is one option: `-d` to display debugging informations.
 [ ] Add support for custom variables
 
 [ ] Add support for custom functions
+
+[ ] Add support for binary encoding (`0bXXX`)
